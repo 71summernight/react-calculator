@@ -9,9 +9,9 @@ import { ERROR_MESSAGE } from './constants/calculator';
 
 export default function App() {
   const {
-    handleNumberClick,
-    handleOperatorClick,
-    calculateResult,
+    appendNumber,
+    handleOperatorSelect,
+    getCalculateResult,
     resetCalculator,
     view,
   } = useCalculator();
@@ -19,11 +19,11 @@ export default function App() {
   return (
     <div className="calculator">
       <Display view={view} />
-      <NumberPad handleNumberClick={view === ERROR_MESSAGE.INFINITY_RESULT_ERROR ? ()=>{} : handleNumberClick} />
+      <NumberPad handleNumberClick={view === ERROR_MESSAGE.INFINITY_RESULT_ERROR ? ()=>{} : appendNumber} />
       <AllClear resetCalculator={resetCalculator} />
       <Operators
-        handleOperatorClick={handleOperatorClick}
-        calculateResult={calculateResult}
+        handleOperatorClick={handleOperatorSelect}
+        getCalculateResult={getCalculateResult}
       />
     </div>
   );

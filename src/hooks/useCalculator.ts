@@ -1,36 +1,52 @@
 import { useCallback, useState } from 'react';
 
-import { ERROR_MESSAGE, MAX_NUM } from '../constants/calculator';
+import { ERROR_MESSAGE, MAX_NUM, OperatorType } from '../constants/calculator';
 
-type Operator = '/' | 'X' | '+' | '-';
+const calculate = (num1: number, num2: number, op: OperatorType) => {
+  switch (op) {
+    case '+':
+      return num1 + num2;
+    case '-':
+      return num1 - num2;
+    case 'X':
+      return num1 * num2;
+    case '/':
+      return num2 !== 0 ? num1 / num2 : ERROR_MESSAGE.INFINITY_RESULT_ERROR;
+    default:
+      return 0;
+  }
+};
 
 export default function useCalculator() {
-  const [firstNum, setFirstNum] = useState('');
-  const [operator, setOperator] = useState<Operator | ''>('');
+  const [firstNum, setFirstNum] = useState(0);
+  const [operator, setOperator] = useState<OperatorType | ''>('');
   const [view, setView] = useState('0');
 
-  const handleNumberClick = useCallback(
+  const appendNumber = useCallback(
     (clickedNum: string) => {
-      const newValue =
-        view === '0' || (operator && !firstNum)
-          ? clickedNum
-          : view + clickedNum;
-      if (Number(newValue) > MAX_NUM) {
+      const isViewEmpty = view === '0';
+      const isOperationInvalid = operator && !firstNum;
+      const shouldUpdateViewWithClickedNum = isViewEmpty || isOperationInvalid;
+      const viewNumber = shouldUpdateViewWithClickedNum
+        ? clickedNum
+        : view + clickedNum;
+
+      if (Number(viewNumber) > MAX_NUM) {
         alert(ERROR_MESSAGE.OVER_MAX_NUMBER);
         return;
       }
-      setView(newValue);
+      setView(viewNumber);
       if (!operator) {
-        setFirstNum(newValue);
+        setFirstNum(Number(viewNumber));
       }
     },
     [view, operator, firstNum],
   );
 
-  const handleOperatorClick = useCallback(
-    (selectedOperator: Operator) => {
+  const handleOperatorSelect = useCallback(
+    (selectedOperator: OperatorType, onError: () => void) => {
       if (operator) {
-        alert(ERROR_MESSAGE.OPERATOR_ORDER_ERROR);
+        onError();
         return;
       }
       setOperator(selectedOperator);
@@ -39,17 +55,15 @@ export default function useCalculator() {
     [operator, view],
   );
 
-  const calculateResult = useCallback(() => {
+  const getCalculateResult = useCallback(() => {
     if (!firstNum || !operator) {
       return;
     }
-    const secondNum = view.substring(firstNum.length + 1);
-    const num1 = Number(firstNum);
-    const num2 = Number(secondNum);
-    const result = calculate(num1, num2, operator);
+    const secondNum = Number(view.match(/(-?\d+)([+\-*/])(-?\d+)/)?.[3]);
+    const result = calculate(firstNum, secondNum, operator);
     if (typeof result === 'number') {
       const truncatedResult = Math.trunc(result);
-      setFirstNum(truncatedResult.toString());
+      setFirstNum(truncatedResult);
       setOperator('');
       setView(truncatedResult.toString());
     } else {
@@ -57,31 +71,16 @@ export default function useCalculator() {
     }
   }, [firstNum, operator, view]);
 
-  const calculate = useCallback((num1: number, num2: number, op: Operator) => {
-    switch (op) {
-      case '+':
-        return num1 + num2;
-      case '-':
-        return num1 - num2;
-      case 'X':
-        return num1 * num2;
-      case '/':
-        return num2 !== 0 ? num1 / num2 : ERROR_MESSAGE.INFINITY_RESULT_ERROR;
-      default:
-        return 0;
-    }
-  }, []);
-
   const resetCalculator = useCallback(() => {
-    setFirstNum('');
+    setFirstNum(0);
     setOperator('');
     setView('0');
   }, []);
 
   return {
-    handleNumberClick,
-    handleOperatorClick,
-    calculateResult,
+    appendNumber,
+    handleOperatorSelect,
+    getCalculateResult,
     resetCalculator,
     view,
   };
