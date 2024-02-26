@@ -23,7 +23,7 @@ export default function useCalculator() {
   const [view, setView] = useState('0');
 
   const appendNumber = useCallback(
-    (clickedNum: string) => {
+    (clickedNum: string, onError: ()=> void) => {
       const isViewEmpty = view === '0';
       const isOperationInvalid = operator && !firstNum;
       const shouldUpdateViewWithClickedNum = isViewEmpty || isOperationInvalid;
@@ -32,8 +32,7 @@ export default function useCalculator() {
         : view + clickedNum;
 
       if (Number(viewNumber) > MAX_NUM) {
-        alert(ERROR_MESSAGE.OVER_MAX_NUMBER);
-        return;
+        onError()
       }
       setView(viewNumber);
       if (!operator) {
